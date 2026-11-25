@@ -119,7 +119,7 @@ def main():
     action_seconds, sample = seconds_for(lambda: lazy_demo.limit(5).collect())
     print(f'[ACTION] limit(5).collect() took {action_seconds}s; sample:', sample)
 
-    # Cache the SMALL, reused aggregation rather than the 1.3-GB raw table.
+    # Cache the SMALL, reused aggregation rather than the ~1.9-GB raw table.
     # First action materializes cache; repeated count should usually be faster.
     cached = zone_hourly.cache()
     first_seconds, aggregation_rows = seconds_for(lambda: cached.count())

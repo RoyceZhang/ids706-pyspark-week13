@@ -29,7 +29,7 @@ The assignment focuses on **distributed data processing, lazy evaluation, Spark 
 ## 2. Repository structure
 
 ```text
-nyc-pyspark-week13/
+ids706-pyspark-week13/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
@@ -49,7 +49,8 @@ nyc-pyspark-week13/
 │   └── query_findings.json
 └── screenshots/
     ├── 01-execution-plan.png
-    ├── 02-query-details.png
+    ├── 02-1-queries.png
+    ├── 02-2-query-details.png
     ├── 03-successful-run.png
     ├── 04-jobs-stages.png
     └── 05-cache-times.png
@@ -156,6 +157,7 @@ The measurements below come from the successful **November 18, 2026** full-data 
 |---|---:|
 | Raw Parquet input | **1,919,289,178 bytes (1.919 GB)** |
 | Input Parquet files | **4** |
+| Filtered and joined trips | **79,916,370** |
 | Aggregated output rows | **49,290** |
 | Lazy DataFrame construction | **0.005171 s** |
 | `limit(5).collect()` action | **0.492 s** |
@@ -167,25 +169,26 @@ The measurements below come from the successful **November 18, 2026** full-data 
 | Read-back output verification | **0.097 s** |
 | Verified written rows | **49,290** |
 
-**Query optimization and filter placement.** The pipeline selects only six source fields before any expensive join or aggregation and places six data-quality/date filtering conditions early in the transformation chain. Spark's Catalyst optimizer can combine compatible filters and perform column pruning during Parquet reads. The script enables Parquet predicate pushdown (`spark.sql.parquet.filterPushdown=true`), explicitly requests a broadcast join for the small taxi-zone lookup, and enables adaptive query execution. The saved [`results/execution_plan.txt`](results/execution_plan.txt) contains both extended and formatted plans, allowing `PushedFilters`, `ReadSchema`, `BroadcastHashJoin`, and `AdaptiveSparkPlan` to be checked against the actual plan. Not every filter is necessarily pushed into the Parquet reader; the physical plan, rather than the code alone, determines which predicates were pushed down.
+The physical plan in [`results/execution_plan.txt`](results/execution_plan.txt) confirms that Spark pushed non-null checks and numeric predicates for distance (`trip_miles > 0`, `trip_miles <= 50`) and positive base fare (`base_passenger_fare > 0`) into the Parquet scan (`PushedFilters`). Timestamp range conditions remained in the Spark `Filter` operator because they appear as cast-based expressions on `pickup_datetime`. The same scan shows `ReadSchema` with exactly six columns (`hvfhs_license_num`, `pickup_datetime`, `PULocationID`, `trip_miles`, `base_passenger_fare`, `tips`), confirming column pruning before enrichment and aggregation.
 
-**Bottlenecks and data movement.** The main expensive operation is the initial computation of the grouped aggregation over four months of data; it includes filtering, enrichment, and grouping by month, hour, borough, zone, and provider. Grouping is a wide transformation that may require a hash-partition exchange (shuffle) to combine records with the same key. The first aggregation `count()` plus cache population required **17.095 seconds**, making it much more expensive than the downstream actions on the smaller aggregate. The Spark UI showed **31 completed stages** and measurable shuffle reads/writes. The pipeline reduces data movement by pruning/filtering before the join, broadcasting the zone dimension, using 16 configured shuffle partitions, and coalescing the **already aggregated** result to four partitions before the month-partitioned Parquet write. The measured main write took **0.750 seconds**, and re-reading the output verified all **49,290** aggregate rows.
+The join and aggregation strategy is also explicit in the plan: `BroadcastHashJoin ... BuildRight` shows the taxi-zone lookup table was broadcast, and aggregation occurs in two phases with `HashAggregate` (partial), then `Exchange hashpartitioning(..., 16)`, followed by final `HashAggregate`. `AdaptiveSparkPlan` confirms AQE was enabled; this report does not claim specific runtime adaptive rewrites beyond what is shown in the captured plan text. For output writing, the pipeline applies `coalesce(4)` after aggregation to control small-file count and then writes the main dataset with `partitionBy('pickup_month')` to keep month-based layout for downstream reads.
 
-**Lazy evaluation, caching, and repeated queries.** Creating `filter()` and `select()` transformations took **0.005171 seconds** without executing a data-processing job. Calling `limit(5).collect()` then triggered an action and took **0.492 seconds**, demonstrating the distinction between lazy transformations and eager actions. The first count, which computed the aggregate and filled its cache, took **17.095 seconds**; repeating the count using cached results took **0.105 seconds**. This corresponds to an illustrative **162.8× time ratio**, but it is **not** a controlled speedup measurement because the first timing also includes upstream processing and cache population. Reusing the cached aggregated view enabled the two subsequent SQL `collect()` actions to complete in **0.221** and **0.160 seconds**, respectively.
+Observed timings from the full run show lazy transformation construction at **0.005171 s**, a sample `collect()` action at **0.492 s**, first aggregation count plus cache population at **17.095 s**, and repeated cached count at **0.105 s** (about **162.8×** faster in this observed comparison). The two SQL result collections took **0.221 s** (monthly summary) and **0.160 s** (peak-hour query). This caching comparison is an observed timing difference in one run, not a controlled cached-versus-uncached benchmark.
 
 ### Execution-plan and Spark UI evidence
 
 The source of truth for the explain plan is [`results/execution_plan.txt`](results/execution_plan.txt), generated by `zone_hourly.explain(mode='extended')` and `zone_hourly.explain(mode='formatted')`. The Spark UI can be inspected during `--keep-ui` execution at the URL printed in the terminal (port **4040** for the recorded run). It is a live local address and will not remain publicly accessible after the application exits.
 
-The following images document the actual run. The first displays the beginning of the *extended logical plan*; the second is the *SQL/DataFrame overview*, not the expanded details page for an individual query. For full rubric coverage, also capture the **Physical Plan** portion of `execution_plan.txt` and an **individual SQL query's details/DAG page** in Spark UI before submitting.
+The following images document the actual run and corresponding Spark UI evidence.
 
 | Screenshot | What it shows |
 |---|---|
-| [Execution plan](screenshots/01-execution-plan.png) | Extended explain output in VS Code (logical-plan section visible) |
-| [SQL/DataFrame overview](screenshots/02-query-details.png) | 13 completed SQL/DataFrame executions |
+| [Execution plan](screenshots/01-execution-plan.png) | `execution_plan.txt` with physical-plan operators (`AdaptiveSparkPlan`, `BroadcastHashJoin`, `Exchange`, `HashAggregate`) |
+| [SQL/DataFrame overview](screenshots/02-1-queries.png) | Spark SQL/DataFrame page with completed queries list |
+| [SQL query details](screenshots/02-2-query-details.png) | Expanded query details view showing a physical plan for an individual SQL/DataFrame execution |
 | [Successful pipeline](screenshots/03-successful-run.png) | Two SQL result tables, three Parquet destinations, output validation |
 | [Spark stages](screenshots/04-jobs-stages.png) | 31 completed stages, task counts, shuffle metrics |
-| [Lazy evaluation and caching](screenshots/05-cache-times.png) | Lazy vs. action timing and initial/repeated cached count |
+| [Lazy evaluation and caching](screenshots/05-cache-times.png) | Logged lazy-construction timing, action timing, and first/repeated cached counts |
 
 ![Successful PySpark pipeline execution](screenshots/03-successful-run.png)
 
@@ -244,4 +247,3 @@ For machine-readable evidence, see [`results/performance_metrics.json`](results/
 ---
 
 **Reproducibility note:** Performance depends on machine resources, input data, Spark configuration, and cache state. The values above describe the successful local run on November 18, 2026. Raw data and generated output are not committed to Git; the included scripts reproduce them.
-# ids706-pyspark-week13
