@@ -1,0 +1,191 @@
+==== EXTENDED PLAN: parsed/analyzed/optimized/physical ====
+== Parsed Logical Plan ==
+'Aggregate ['pickup_month, 'pickup_hour, 'Borough, 'Zone, 'hvfhs_license_num], ['pickup_month, 'pickup_hour, 'Borough, 'Zone, 'hvfhs_license_num, count(1) AS trip_count#148L, sum('fare_usd) AS total_base_fare#150, sum('tip_usd) AS total_tips#152, sum('trip_miles) AS total_miles#154]
++- Project [PULocationID#7, pickup_datetime#5, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, Borough#111, Zone#112]
+   +- Join Inner, (PULocationID#7 = PULocationID#118)
+      :- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, coalesce(cast(tips#17 as double), 0.0) AS tip_usd#82]
+      :  +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, cast(base_passenger_fare#11 as double) AS fare_usd#72]
+      :     +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, hour(pickup_datetime#5, Some(America/New_York)) AS pickup_hour#63]
+      :        +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, date_format(cast(pickup_datetime#5 as timestamp), yyyy-MM, Some(America/New_York)) AS pickup_month#55]
+      :           +- Filter isnotnull(hvfhs_license_num#0)
+      :              +- Filter isnotnull(PULocationID#7)
+      :                 +- Filter (base_passenger_fare#11 > cast(0 as double))
+      :                    +- Filter ((trip_miles#9 > cast(0 as double)) AND (trip_miles#9 <= cast(50 as double)))
+      :                       +- Filter (cast(pickup_datetime#5 as timestamp) < cast(2024-05-01 as timestamp))
+      :                          +- Filter (cast(pickup_datetime#5 as timestamp) >= cast(2024-01-01 as timestamp))
+      :                             +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0]
+      :                                +- Relation [hvfhs_license_num#0,dispatching_base_num#1,originating_base_num#2,request_datetime#3,on_scene_datetime#4,pickup_datetime#5,dropoff_datetime#6,PULocationID#7,DOLocationID#8,trip_miles#9,trip_time#10L,base_passenger_fare#11,tolls#12,bcf#13,sales_tax#14,congestion_surcharge#15,airport_fee#16,tips#17,driver_pay#18,shared_request_flag#19,shared_match_flag#20,access_a_ride_flag#21,wav_request_flag#22,wav_match_flag#23] parquet
+      +- ResolvedHint (strategy=broadcast)
+         +- Deduplicate [PULocationID#118]
+            +- Project [cast(LocationID#110 as int) AS PULocationID#118, Borough#111, Zone#112]
+               +- Relation [LocationID#110,Borough#111,Zone#112,service_zone#113] csv
+
+== Analyzed Logical Plan ==
+pickup_month: string, pickup_hour: int, Borough: string, Zone: string, hvfhs_license_num: string, trip_count: bigint, total_base_fare: double, total_tips: double, total_miles: double
+Aggregate [pickup_month#55, pickup_hour#63, Borough#111, Zone#112, hvfhs_license_num#0], [pickup_month#55, pickup_hour#63, Borough#111, Zone#112, hvfhs_license_num#0, count(1) AS trip_count#148L, sum(fare_usd#72) AS total_base_fare#150, sum(tip_usd#82) AS total_tips#152, sum(trip_miles#9) AS total_miles#154]
++- Project [PULocationID#7, pickup_datetime#5, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, Borough#111, Zone#112]
+   +- Join Inner, (PULocationID#7 = PULocationID#118)
+      :- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, coalesce(cast(tips#17 as double), 0.0) AS tip_usd#82]
+      :  +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, cast(base_passenger_fare#11 as double) AS fare_usd#72]
+      :     +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, pickup_month#55, hour(pickup_datetime#5, Some(America/New_York)) AS pickup_hour#63]
+      :        +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0, date_format(cast(pickup_datetime#5 as timestamp), yyyy-MM, Some(America/New_York)) AS pickup_month#55]
+      :           +- Filter isnotnull(hvfhs_license_num#0)
+      :              +- Filter isnotnull(PULocationID#7)
+      :                 +- Filter (base_passenger_fare#11 > cast(0 as double))
+      :                    +- Filter ((trip_miles#9 > cast(0 as double)) AND (trip_miles#9 <= cast(50 as double)))
+      :                       +- Filter (cast(pickup_datetime#5 as timestamp) < cast(2024-05-01 as timestamp))
+      :                          +- Filter (cast(pickup_datetime#5 as timestamp) >= cast(2024-01-01 as timestamp))
+      :                             +- Project [pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17, hvfhs_license_num#0]
+      :                                +- Relation [hvfhs_license_num#0,dispatching_base_num#1,originating_base_num#2,request_datetime#3,on_scene_datetime#4,pickup_datetime#5,dropoff_datetime#6,PULocationID#7,DOLocationID#8,trip_miles#9,trip_time#10L,base_passenger_fare#11,tolls#12,bcf#13,sales_tax#14,congestion_surcharge#15,airport_fee#16,tips#17,driver_pay#18,shared_request_flag#19,shared_match_flag#20,access_a_ride_flag#21,wav_request_flag#22,wav_match_flag#23] parquet
+      +- ResolvedHint (strategy=broadcast)
+         +- Deduplicate [PULocationID#118]
+            +- Project [cast(LocationID#110 as int) AS PULocationID#118, Borough#111, Zone#112]
+               +- Relation [LocationID#110,Borough#111,Zone#112,service_zone#113] csv
+
+== Optimized Logical Plan ==
+Aggregate [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0], [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, count(1) AS trip_count#148L, sum(fare_usd#72) AS total_base_fare#150, sum(tip_usd#82) AS total_tips#152, sum(trip_miles#9) AS total_miles#154]
++- Project [trip_miles#9, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, Borough#165, Zone#167]
+   +- Join Inner, (PULocationID#7 = PULocationID#118), rightHint=(strategy=broadcast)
+      :- Project [PULocationID#7, trip_miles#9, hvfhs_license_num#0, date_format(cast(pickup_datetime#5 as timestamp), yyyy-MM, Some(America/New_York)) AS pickup_month#55, hour(pickup_datetime#5, Some(America/New_York)) AS pickup_hour#63, base_passenger_fare#11 AS fare_usd#72, coalesce(tips#17, 0.0) AS tip_usd#82]
+      :  +- Filter (((isnotnull(pickup_datetime#5) AND isnotnull(trip_miles#9)) AND isnotnull(base_passenger_fare#11)) AND (((cast(pickup_datetime#5 as timestamp) >= 2024-01-01 00:00:00) AND (cast(pickup_datetime#5 as timestamp) < 2024-05-01 00:00:00)) AND (((((trip_miles#9 > 0.0) AND (trip_miles#9 <= 50.0)) AND (base_passenger_fare#11 > 0.0)) AND isnotnull(PULocationID#7)) AND isnotnull(hvfhs_license_num#0))))
+      :     +- Relation [hvfhs_license_num#0,dispatching_base_num#1,originating_base_num#2,request_datetime#3,on_scene_datetime#4,pickup_datetime#5,dropoff_datetime#6,PULocationID#7,DOLocationID#8,trip_miles#9,trip_time#10L,base_passenger_fare#11,tolls#12,bcf#13,sales_tax#14,congestion_surcharge#15,airport_fee#16,tips#17,driver_pay#18,shared_request_flag#19,shared_match_flag#20,access_a_ride_flag#21,wav_request_flag#22,wav_match_flag#23] parquet
+      +- Aggregate [PULocationID#118], [PULocationID#118, first(Borough#111, false) AS Borough#165, first(Zone#112, false) AS Zone#167]
+         +- Project [cast(LocationID#110 as int) AS PULocationID#118, Borough#111, Zone#112]
+            +- Filter isnotnull(cast(LocationID#110 as int))
+               +- Relation [LocationID#110,Borough#111,Zone#112,service_zone#113] csv
+
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0], functions=[count(1), sum(fare_usd#72), sum(tip_usd#82), sum(trip_miles#9)], output=[pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, trip_count#148L, total_base_fare#150, total_tips#152, total_miles#154])
+   +- Exchange hashpartitioning(pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, 16), ENSURE_REQUIREMENTS, [plan_id=69]
+      +- HashAggregate(keys=[pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0], functions=[partial_count(1), partial_sum(fare_usd#72), partial_sum(tip_usd#82), partial_sum(trip_miles#9)], output=[pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, count#172L, sum#173, sum#174, sum#175])
+         +- Project [trip_miles#9, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, Borough#165, Zone#167]
+            +- BroadcastHashJoin [PULocationID#7], [PULocationID#118], Inner, BuildRight, false
+               :- Project [PULocationID#7, trip_miles#9, hvfhs_license_num#0, date_format(cast(pickup_datetime#5 as timestamp), yyyy-MM, Some(America/New_York)) AS pickup_month#55, hour(pickup_datetime#5, Some(America/New_York)) AS pickup_hour#63, base_passenger_fare#11 AS fare_usd#72, coalesce(tips#17, 0.0) AS tip_usd#82]
+               :  +- Filter (((((((((isnotnull(pickup_datetime#5) AND isnotnull(trip_miles#9)) AND isnotnull(base_passenger_fare#11)) AND (cast(pickup_datetime#5 as timestamp) >= 2024-01-01 00:00:00)) AND (cast(pickup_datetime#5 as timestamp) < 2024-05-01 00:00:00)) AND (trip_miles#9 > 0.0)) AND (trip_miles#9 <= 50.0)) AND (base_passenger_fare#11 > 0.0)) AND isnotnull(PULocationID#7)) AND isnotnull(hvfhs_license_num#0))
+               :     +- FileScan parquet [hvfhs_license_num#0,pickup_datetime#5,PULocationID#7,trip_miles#9,base_passenger_fare#11,tips#17] Batched: true, DataFilters: [isnotnull(pickup_datetime#5), isnotnull(trip_miles#9), isnotnull(base_passenger_fare#11), (cast(..., Format: Parquet, Location: InMemoryFileIndex(4 paths)[file:/Users/zhangrongsheng/Downloads/nyc-pyspark-week13/data/raw/fhvhv..., PartitionFilters: [], PushedFilters: [IsNotNull(pickup_datetime), IsNotNull(trip_miles), IsNotNull(base_passenger_fare), GreaterThan(t..., ReadSchema: struct<hvfhs_license_num:string,pickup_datetime:timestamp_ntz,PULocationID:int,trip_miles:double,...
+               +- BroadcastExchange HashedRelationBroadcastMode(List(cast(input[0, int, true] as bigint)),false), [plan_id=64]
+                  +- SortAggregate(key=[PULocationID#118], functions=[first(Borough#111, false), first(Zone#112, false)], output=[PULocationID#118, Borough#165, Zone#167])
+                     +- Sort [PULocationID#118 ASC NULLS FIRST], false, 0
+                        +- Exchange hashpartitioning(PULocationID#118, 16), ENSURE_REQUIREMENTS, [plan_id=60]
+                           +- SortAggregate(key=[PULocationID#118], functions=[partial_first(Borough#111, false), partial_first(Zone#112, false)], output=[PULocationID#118, first#180, valueSet#181, first#182, valueSet#183])
+                              +- Sort [PULocationID#118 ASC NULLS FIRST], false, 0
+                                 +- Project [cast(LocationID#110 as int) AS PULocationID#118, Borough#111, Zone#112]
+                                    +- Filter isnotnull(cast(LocationID#110 as int))
+                                       +- FileScan csv [LocationID#110,Borough#111,Zone#112] Batched: false, DataFilters: [isnotnull(cast(LocationID#110 as int))], Format: CSV, Location: InMemoryFileIndex(1 paths)[file:/Users/zhangrongsheng/Downloads/nyc-pyspark-week13/data/raw/taxi_..., PartitionFilters: [], PushedFilters: [], ReadSchema: struct<LocationID:string,Borough:string,Zone:string>
+
+
+==== FORMATTED PHYSICAL PLAN ====
+== Physical Plan ==
+AdaptiveSparkPlan (18)
++- HashAggregate (17)
+   +- Exchange (16)
+      +- HashAggregate (15)
+         +- Project (14)
+            +- BroadcastHashJoin Inner BuildRight (13)
+               :- Project (3)
+               :  +- Filter (2)
+               :     +- Scan parquet  (1)
+               +- BroadcastExchange (12)
+                  +- SortAggregate (11)
+                     +- Sort (10)
+                        +- Exchange (9)
+                           +- SortAggregate (8)
+                              +- Sort (7)
+                                 +- Project (6)
+                                    +- Filter (5)
+                                       +- Scan csv  (4)
+
+
+(1) Scan parquet 
+Output [6]: [hvfhs_license_num#0, pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17]
+Batched: true
+Location: InMemoryFileIndex [file:/Users/zhangrongsheng/Downloads/nyc-pyspark-week13/data/raw/fhvhv_tripdata_2024-01.parquet, ... 3 entries]
+PushedFilters: [IsNotNull(pickup_datetime), IsNotNull(trip_miles), IsNotNull(base_passenger_fare), GreaterThan(trip_miles,0.0), LessThanOrEqual(trip_miles,50.0), GreaterThan(base_passenger_fare,0.0), IsNotNull(PULocationID), IsNotNull(hvfhs_license_num)]
+ReadSchema: struct<hvfhs_license_num:string,pickup_datetime:timestamp_ntz,PULocationID:int,trip_miles:double,base_passenger_fare:double,tips:double>
+
+(2) Filter
+Input [6]: [hvfhs_license_num#0, pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17]
+Condition : (((((((((isnotnull(pickup_datetime#5) AND isnotnull(trip_miles#9)) AND isnotnull(base_passenger_fare#11)) AND (cast(pickup_datetime#5 as timestamp) >= 2024-01-01 00:00:00)) AND (cast(pickup_datetime#5 as timestamp) < 2024-05-01 00:00:00)) AND (trip_miles#9 > 0.0)) AND (trip_miles#9 <= 50.0)) AND (base_passenger_fare#11 > 0.0)) AND isnotnull(PULocationID#7)) AND isnotnull(hvfhs_license_num#0))
+
+(3) Project
+Output [7]: [PULocationID#7, trip_miles#9, hvfhs_license_num#0, date_format(cast(pickup_datetime#5 as timestamp), yyyy-MM, Some(America/New_York)) AS pickup_month#55, hour(pickup_datetime#5, Some(America/New_York)) AS pickup_hour#63, base_passenger_fare#11 AS fare_usd#72, coalesce(tips#17, 0.0) AS tip_usd#82]
+Input [6]: [hvfhs_license_num#0, pickup_datetime#5, PULocationID#7, trip_miles#9, base_passenger_fare#11, tips#17]
+
+(4) Scan csv 
+Output [3]: [LocationID#110, Borough#111, Zone#112]
+Batched: false
+Location: InMemoryFileIndex [file:/Users/zhangrongsheng/Downloads/nyc-pyspark-week13/data/raw/taxi_zone_lookup.csv]
+ReadSchema: struct<LocationID:string,Borough:string,Zone:string>
+
+(5) Filter
+Input [3]: [LocationID#110, Borough#111, Zone#112]
+Condition : isnotnull(cast(LocationID#110 as int))
+
+(6) Project
+Output [3]: [cast(LocationID#110 as int) AS PULocationID#118, Borough#111, Zone#112]
+Input [3]: [LocationID#110, Borough#111, Zone#112]
+
+(7) Sort
+Input [3]: [PULocationID#118, Borough#111, Zone#112]
+Arguments: [PULocationID#118 ASC NULLS FIRST], false, 0
+
+(8) SortAggregate
+Input [3]: [PULocationID#118, Borough#111, Zone#112]
+Keys [1]: [PULocationID#118]
+Functions [2]: [partial_first(Borough#111, false), partial_first(Zone#112, false)]
+Aggregate Attributes [4]: [first#176, valueSet#177, first#178, valueSet#179]
+Results [5]: [PULocationID#118, first#180, valueSet#181, first#182, valueSet#183]
+
+(9) Exchange
+Input [5]: [PULocationID#118, first#180, valueSet#181, first#182, valueSet#183]
+Arguments: hashpartitioning(PULocationID#118, 16), ENSURE_REQUIREMENTS, [plan_id=60]
+
+(10) Sort
+Input [5]: [PULocationID#118, first#180, valueSet#181, first#182, valueSet#183]
+Arguments: [PULocationID#118 ASC NULLS FIRST], false, 0
+
+(11) SortAggregate
+Input [5]: [PULocationID#118, first#180, valueSet#181, first#182, valueSet#183]
+Keys [1]: [PULocationID#118]
+Functions [2]: [first(Borough#111, false), first(Zone#112, false)]
+Aggregate Attributes [2]: [first(Borough#111)()#164, first(Zone#112)()#166]
+Results [3]: [PULocationID#118, first(Borough#111)()#164 AS Borough#165, first(Zone#112)()#166 AS Zone#167]
+
+(12) BroadcastExchange
+Input [3]: [PULocationID#118, Borough#165, Zone#167]
+Arguments: HashedRelationBroadcastMode(List(cast(input[0, int, true] as bigint)),false), [plan_id=64]
+
+(13) BroadcastHashJoin
+Left keys [1]: [PULocationID#7]
+Right keys [1]: [PULocationID#118]
+Join type: Inner
+Join condition: None
+
+(14) Project
+Output [8]: [trip_miles#9, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, Borough#165, Zone#167]
+Input [10]: [PULocationID#7, trip_miles#9, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, PULocationID#118, Borough#165, Zone#167]
+
+(15) HashAggregate
+Input [8]: [trip_miles#9, hvfhs_license_num#0, pickup_month#55, pickup_hour#63, fare_usd#72, tip_usd#82, Borough#165, Zone#167]
+Keys [5]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0]
+Functions [4]: [partial_count(1), partial_sum(fare_usd#72), partial_sum(tip_usd#82), partial_sum(trip_miles#9)]
+Aggregate Attributes [4]: [count#168L, sum#169, sum#170, sum#171]
+Results [9]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, count#172L, sum#173, sum#174, sum#175]
+
+(16) Exchange
+Input [9]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, count#172L, sum#173, sum#174, sum#175]
+Arguments: hashpartitioning(pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, 16), ENSURE_REQUIREMENTS, [plan_id=69]
+
+(17) HashAggregate
+Input [9]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, count#172L, sum#173, sum#174, sum#175]
+Keys [5]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0]
+Functions [4]: [count(1), sum(fare_usd#72), sum(tip_usd#82), sum(trip_miles#9)]
+Aggregate Attributes [4]: [count(1)#147L, sum(fare_usd#72)#149, sum(tip_usd#82)#151, sum(trip_miles#9)#153]
+Results [9]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, count(1)#147L AS trip_count#148L, sum(fare_usd#72)#149 AS total_base_fare#150, sum(tip_usd#82)#151 AS total_tips#152, sum(trip_miles#9)#153 AS total_miles#154]
+
+(18) AdaptiveSparkPlan
+Output [9]: [pickup_month#55, pickup_hour#63, Borough#165, Zone#167, hvfhs_license_num#0, trip_count#148L, total_base_fare#150, total_tips#152, total_miles#154]
+Arguments: isFinalPlan=false
+
+

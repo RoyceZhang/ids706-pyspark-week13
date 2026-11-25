@@ -1,0 +1,90 @@
+{
+  "monthly_summary": [
+    {
+      "pickup_month": "2024-01",
+      "trips": 19631427,
+      "base_fare_usd": 466230322.64,
+      "avg_trip_miles": 4.77
+    },
+    {
+      "pickup_month": "2024-02",
+      "trips": 19326984,
+      "base_fare_usd": 465363051.39,
+      "avg_trip_miles": 4.87
+    },
+    {
+      "pickup_month": "2024-03",
+      "trips": 21252436,
+      "base_fare_usd": 538178455.44,
+      "avg_trip_miles": 4.88
+    },
+    {
+      "pickup_month": "2024-04",
+      "trips": 19705523,
+      "base_fare_usd": 505434419.43,
+      "avg_trip_miles": 4.96
+    }
+  ],
+  "top_borough_hours": [
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 18,
+      "trips": 2052173,
+      "base_fare_usd": 53467427.33
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 19,
+      "trips": 2007877,
+      "base_fare_usd": 50254218.98
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 20,
+      "trips": 1954579,
+      "base_fare_usd": 51418156.18
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 21,
+      "trips": 1939294,
+      "base_fare_usd": 53257347.75
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 22,
+      "trips": 1876556,
+      "base_fare_usd": 51932231.49
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 17,
+      "trips": 1850771,
+      "base_fare_usd": 52014687.53
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 23,
+      "trips": 1604606,
+      "base_fare_usd": 42467075.64
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 16,
+      "trips": 1574544,
+      "base_fare_usd": 46948556.85
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 15,
+      "trips": 1479442,
+      "base_fare_usd": 45159283.62
+    },
+    {
+      "Borough": "Manhattan",
+      "pickup_hour": 14,
+      "trips": 1420944,
+      "base_fare_usd": 42936772.73
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dataset_parquet_bytes": 1919289178,
+  "dataset_parquet_gb_decimal": 1.919,
+  "input_file_count": 4,
+  "spark_version": "3.5.6",
+  "spark_ui": "http://10.198.233.80:4040",
+  "aggregation_result_rows": 49290,
+  "lazy_dataframe_construction_seconds": 0.005171,
+  "collect_action_seconds": 0.492,
+  "first_aggregation_count_and_cache_population_seconds": 17.095,
+  "repeat_cached_aggregation_count_seconds": 0.105,
+  "sql_monthly_collect_seconds": 0.221,
+  "sql_peak_hours_collect_seconds": 0.16,
+  "zone_hourly_parquet_write_seconds": 0.75,
+  "written_parquet_verification_count_seconds": 0.097,
+  "verified_written_rows": 49290
+}
